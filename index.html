@@ -3,105 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultorio Pro - WhatsApp Integration</title>
+    <title>Consultorio Pro - Agenda Flexible</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     
     <style>
-        :root { --primary: #2c3e50; --secondary: #3498db; --success: #27ae60; --danger: #e74c3c; --whatsapp: #25d366; }
+        :root { --primary: #2c3e50; --secondary: #3498db; --success: #27ae60; --danger: #e74c3c; --accent: #8e44ad; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 1300px; margin: auto; display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .full-width { grid-column: 1 / -1; }
+        .container { max-width: 1400px; margin: auto; display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
         h2 { color: var(--primary); font-size: 1.1rem; border-bottom: 2px solid var(--secondary); padding-bottom: 8px; margin-top: 0; }
         .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
         label { display: block; font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; color: #666; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        .btn { padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; margin-top: 10px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .btn { padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; margin-top: 5px; }
         .btn-save { background: var(--success); color: white; }
-        .btn-pdf { background: var(--danger); color: white; width: auto; padding: 10px 20px; }
-        .btn-del { background: #fee2e2; color: #dc2626; border: 1px solid #f87171; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
-        .btn-ws { background: var(--whatsapp); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: bold; text-decoration: none; display: inline-block; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { background: var(--primary); color: white; padding: 12px; text-align: left; font-size: 0.85rem; }
-        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
-        .actions-cell { display: flex; gap: 5px; }
+        .btn-cita { background: var(--accent); color: white; }
+        .btn-pdf { background: var(--danger); color: white; width: auto; padding: 8px 15px; font-size: 0.8rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+        th { background: var(--primary); color: white; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        .grid-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; grid-column: 1 / -1; }
+        .btn-del { background: #fee2e2; color: #dc2626; border: 1px solid #f87171; padding: 4px 8px; cursor: pointer; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <aside class="card">
-        <h2>🩺 Registro Médico</h2>
-        <div class="form-row">
-            <div style="flex:1"><label>Fecha</label><input type="date" id="fechaManual"></div>
-            <div style="flex:1"><label>Hora</label><input type="time" id="horaManual"></div>
+    <aside>
+        <div class="card">
+            <h2>🩺 Registro de Salud</h2>
+            <div class="form-row">
+                <div style="flex:1"><label>Fecha</label><input type="date" id="fechaClinica"></div>
+                <div style="flex:1"><label>Hora</label><input type="time" id="horaClinica"></div>
+            </div>
+            <label>Sistólica / Diastólica</label>
+            <div class="form-row">
+                <input type="number" id="sis" placeholder="Sis">
+                <input type="number" id="dia" placeholder="Dia">
+            </div>
+            <label>Glucosa (mg/dL)</label>
+            <input type="number" id="gluc" placeholder="Nivel de azúcar" style="margin-bottom:10px">
+            <button class="btn btn-save" onclick="guardarSalud()">Guardar en Historial</button>
         </div>
-        <label>Nombre del Paciente</label>
-        <input type="text" id="nombre" placeholder="Nombre completo">
-        <label>Teléfono (WhatsApp)</label>
-        <input type="tel" id="telefono" placeholder="Ej: 5215512345678">
-        
-        <div class="form-row">
-            <div style="flex:1"><label>Peso (kg)</label><input type="number" id="peso" step="0.1"></div>
-            <div style="flex:1"><label>Talla (cm)</label><input type="number" id="talla"></div>
+
+        <div class="card">
+            <h2>📅 Nueva Cita</h2>
+            <div class="form-row">
+                <div style="flex:1"><label>Fecha</label><input type="date" id="fechaCita"></div>
+                <div style="flex:1"><label>Hora</label><input type="time" id="horaCita"></div>
+            </div>
+            <label>Médico / Especialista</label>
+            <input type="text" id="medico" placeholder="Nombre del Dr." style="margin-bottom:10px">
+            <label>Ubicación / Hospital</label>
+            <input type="text" id="ubicacion" placeholder="¿Dónde es la cita?" style="margin-bottom:10px">
+            <button class="btn btn-cita" onclick="guardarCita()">Agendar Cita</button>
         </div>
-        <div class="form-row">
-            <div style="flex:1"><label>Sistólica</label><input type="number" id="sis"></div>
-            <div style="flex:1"><label>Diastólica</label><input type="number" id="dia"></div>
-        </div>
-        <label>Glucosa (mg/dL)</label>
-        <div class="form-row">
-            <input type="number" id="glucosa" style="flex:2">
-            <select id="momento" style="flex:3">
-                <option value="Ayunas">Ayunas</option>
-                <option value="Post-Comida">Post-Comida</option>
-            </select>
-        </div>
-        <button class="btn btn-save" onclick="agregarRegistro()">Guardar Registro</button>
     </aside>
 
-    <main class="card">
-        <h2>📊 Tendencias</h2>
-        <canvas id="graficaSalud"></canvas>
-    </main>
-
-    <section class="card full-width">
-        <div style="flex:1; display:flex; justify-content:space-between; align-items:center;">
-            <h2>📋 Historial del Paciente</h2>
-            <button class="btn btn-pdf" onclick="exportarPDF()">Bajar Reporte PDF</button>
+    <main>
+        <div class="card">
+            <h2>📊 Tendencia de Salud</h2>
+            <canvas id="graficaSalud" height="120"></canvas>
         </div>
-        <table id="tablaPacientes">
-            <thead>
-                <tr>
-                    <th>Fecha/Hora</th>
-                    <th>Paciente</th>
-                    <th>IMC</th>
-                    <th>Presión</th>
-                    <th>Glucosa</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </section>
+
+        <div class="grid-tables">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center">
+                    <h2>📋 Historial Médico</h2>
+                    <button class="btn-pdf" onclick="exportarPDF()">Exportar PDF</button>
+                </div>
+                <table id="tablaSalud">
+                    <thead><tr><th>Fecha/Hora</th><th>P.A.</th><th>Gluc.</th><th>Acción</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>📅 Agenda de Citas</h2>
+                <table id="tablaCitas">
+                    <thead><tr><th>Fecha/Hora</th><th>Médico</th><th>Lugar</th><th>Acción</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 </div>
 
 <script>
-    let historial = JSON.parse(localStorage.getItem('db_medica_v7')) || [];
+    let dbSalud = JSON.parse(localStorage.getItem('db_salud_v8')) || [];
+    let dbCitas = JSON.parse(localStorage.getItem('db_citas_v8')) || [];
     let miGrafica;
 
     window.onload = () => {
         const ahora = new Date();
-        document.getElementById('fechaManual').value = ahora.toISOString().split('T')[0];
-        document.getElementById('horaManual').value = ahora.toTimeString().slice(0,5);
+        const hoy = ahora.toISOString().split('T')[0];
+        const hora = ahora.toTimeString().slice(0,5);
+        document.getElementById('fechaClinica').value = hoy;
+        document.getElementById('horaClinica').value = hora;
+        document.getElementById('fechaCita').value = hoy;
+        document.getElementById('horaCita').value = hora;
         initGrafica();
-        actualizarUI();
+        renderTodo();
     };
 
-    function t12(hora24) {
-        let [h, m] = hora24.split(':');
+    function t12(h24) {
+        if(!h24) return "";
+        let [h, m] = h24.split(':');
         let ampm = h >= 12 ? 'PM' : 'AM';
         h = h % 12 || 12;
         return `${h}:${m} ${ampm}`;
@@ -112,100 +121,104 @@
         miGrafica = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: historial.map(h => `${h.fecha} ${h.hora12}`),
+                labels: dbSalud.map(d => d.fLabel),
                 datasets: [
-                    { label: 'Sistólica', data: historial.map(h => h.sis), borderColor: '#e74c3c' },
-                    { label: 'Diastólica', data: historial.map(h => h.dia), borderColor: '#c0392b', borderDash: [5,5] },
-                    { label: 'Glucosa', data: historial.map(h => h.glucosa), borderColor: '#f1c40f' }
+                    { label: 'Sistólica', data: dbSalud.map(d => d.sis), borderColor: '#e74c3c', tension: 0.3 },
+                    { label: 'Glucosa', data: dbSalud.map(d => d.gluc), borderColor: '#f1c40f', tension: 0.3 }
                 ]
-            },
-            options: { animation: false }
+            }
         });
     }
 
-    function agregarRegistro() {
-        const fRaw = document.getElementById('fechaManual').value;
-        const hRaw = document.getElementById('horaManual').value;
-        const n = document.getElementById('nombre').value;
-        const tel = document.getElementById('telefono').value;
-        const p = parseFloat(document.getElementById('peso').value);
-        const t = parseFloat(document.getElementById('talla').value);
-        const s = parseInt(document.getElementById('sis').value);
-        const d = parseInt(document.getElementById('dia').value);
-        const g = parseInt(document.getElementById('glucosa').value);
-        const m = document.getElementById('momento').value;
-
-        if(!n || isNaN(s)) return alert("Nombre y Presión son obligatorios.");
-
-        const partes = fRaw.split('-');
-        const imc = (p / ((t/100)**2)).toFixed(1);
-
-        historial.push({ 
-            id: Date.now(), fecha: `${partes[2]}/${partes[1]}/${partes[0]}`, 
-            hora12: t12(hRaw), sortKey: `${fRaw}T${hRaw}`, 
-            nombre: n, tel: tel, peso: p, talla: t, sis: s, dia: d, glucosa: g, momento: m, imc 
-        });
-
-        historial.sort((a, b) => new Date(a.sortKey) - new Date(b.sortKey));
-        localStorage.setItem('db_medica_v7', JSON.stringify(historial));
-        actualizarUI();
-    }
-
-    function enviarWhatsApp(id) {
-        const reg = historial.find(h => h.id === id);
-        if(!reg.tel) return alert("No hay teléfono registrado para este paciente.");
+    function guardarSalud() {
+        const f = document.getElementById('fechaClinica').value;
+        const h = document.getElementById('horaClinica').value;
+        const s = document.getElementById('sis').value;
+        const g = document.getElementById('gluc').value;
         
-        const mensaje = `Hola ${reg.nombre}, le envío su reporte médico del día ${reg.fecha}. %0A%0A` +
-                        `*Resultados:*%0A` +
-                        `- Presión: ${reg.sis}/${reg.dia} mmHg%0A` +
-                        `- Glucosa: ${reg.glucosa} mg/dL (${reg.momento})%0A` +
-                        `- IMC: ${reg.imc}%0A%0A` +
-                        `Le adjunto el PDF detallado a continuación.`;
-        
-        window.open(`https://wa.me/${reg.tel}?text=${mensaje}`, '_blank');
-    }
+        if(!s || !g) return alert("Ingresa presión y glucosa.");
 
-    function eliminarRegistro(id) {
-        if(confirm("¿Eliminar registro?")) {
-            historial = historial.filter(h => h.id !== id);
-            localStorage.setItem('db_medica_v7', JSON.stringify(historial));
-            actualizarUI();
-        }
-    }
-
-    function actualizarUI() {
-        const tbody = document.querySelector('#tablaPacientes tbody');
-        tbody.innerHTML = "";
-        historial.forEach(reg => {
-            const fila = tbody.insertRow();
-            fila.innerHTML = `
-                <td>${reg.fecha}<br><small>${reg.hora12}</small></td>
-                <td>${reg.nombre}</td>
-                <td>${reg.imc}</td>
-                <td>${reg.sis}/${reg.dia}</td>
-                <td>${reg.glucosa}</td>
-                <td class="actions-cell">
-                    <button class="btn-ws" onclick="enviarWhatsApp(${reg.id})">WhatsApp</button>
-                    <button class="btn-del" onclick="eliminarRegistro(${reg.id})">Borrar</button>
-                </td>
-            `;
+        const partes = f.split('-');
+        dbSalud.push({
+            id: Date.now(),
+            fLabel: `${partes[2]}/${partes[1]}`,
+            fullFecha: `${partes[2]}/${partes[1]}/${partes[0]} ${t12(h)}`,
+            sort: `${f}T${h}`,
+            sis: s, gluc: g
         });
+        dbSalud.sort((a,b) => new Date(a.sort) - new Date(b.sort));
+        localStorage.setItem('db_salud_v8', JSON.stringify(dbSalud));
+        renderTodo();
+    }
+
+    function guardarCita() {
+        const f = document.getElementById('fechaCita').value;
+        const h = document.getElementById('horaCita').value;
+        const m = document.getElementById('medico').value;
+        const u = document.getElementById('ubicacion').value;
+
+        if(!m || !u) return alert("Ingresa médico y ubicación.");
+
+        const partes = f.split('-');
+        dbCitas.push({
+            id: Date.now(),
+            fecha: `${partes[2]}/${partes[1]}/${partes[0]}`,
+            hora: t12(h),
+            sort: `${f}T${h}`,
+            medico: m,
+            ubicacion: u
+        });
+        dbCitas.sort((a,b) => new Date(a.sort) - new Date(b.sort));
+        localStorage.setItem('db_citas_v8', JSON.stringify(dbCitas));
+        renderTodo();
+        // Limpiar campos de cita
+        document.getElementById('medico').value = "";
+        document.getElementById('ubicacion').value = "";
+    }
+
+    function eliminar(id, tipo) {
+        if(!confirm("¿Eliminar este registro?")) return;
+        if(tipo === 'salud') dbSalud = dbSalud.filter(x => x.id !== id);
+        else dbCitas = dbCitas.filter(x => x.id !== id);
+        localStorage.setItem(tipo === 'salud' ? 'db_salud_v8' : 'db_citas_v8', JSON.stringify(tipo === 'salud' ? dbSalud : dbCitas));
+        renderTodo();
+    }
+
+    function renderTodo() {
+        const tSalud = document.querySelector('#tablaSalud tbody');
+        const tCitas = document.querySelector('#tablaCitas tbody');
+        tSalud.innerHTML = ""; tCitas.innerHTML = "";
+
+        dbSalud.forEach(d => {
+            tSalud.innerHTML += `<tr><td>${d.fullFecha}</td><td>${d.sis}</td><td>${d.gluc}</td><td><button class="btn-del" onclick="eliminar(${d.id}, 'salud')">×</button></td></tr>`;
+        });
+
+        dbCitas.forEach(c => {
+            tCitas.innerHTML += `<tr><td>${c.fecha}<br>${c.hora}</td><td>${c.medico}</td><td>${c.ubicacion}</td><td><button class="btn-del" onclick="eliminar(${c.id}, 'citas')">×</button></td></tr>`;
+        });
+
         if(miGrafica) {
-            miGrafica.data.labels = historial.map(h => `${h.fecha} ${h.hora12}`);
-            miGrafica.data.datasets[0].data = historial.map(h => h.sis);
-            miGrafica.data.datasets[1].data = historial.map(h => h.dia);
-            miGrafica.data.datasets[2].data = historial.map(h => h.glucosa);
+            miGrafica.data.labels = dbSalud.map(d => d.fLabel);
+            miGrafica.data.datasets[0].data = dbSalud.map(d => d.sis);
+            miGrafica.data.datasets[1].data = dbSalud.map(d => d.gluc);
             miGrafica.update();
         }
     }
 
-    async function exportarPDF() {
+    function exportarPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.text("REPORTE MÉDICO", 105, 20, { align: 'center' });
-        doc.addImage(document.getElementById('graficaSalud').toDataURL('image/png'), 'PNG', 15, 30, 180, 70);
-        doc.autoTable({ html: '#tablaPacientes', startY: 110, columns: [0, 1, 2, 3, 4] });
-        doc.save("reporte.pdf");
+        doc.setFontSize(18);
+        doc.text("EXPEDIENTE CLÍNICO Y AGENDA", 105, 15, {align:'center'});
+        
+        doc.setFontSize(12);
+        doc.text("Historial de Signos Vitales", 14, 25);
+        doc.autoTable({ html: '#tablaSalud', startY: 30, headStyles:{fillColor:[44,62,80]}, columns:[0,1,2] });
+        
+        doc.text("Próximas Citas Médicas", 14, doc.lastAutoTable.finalY + 15);
+        doc.autoTable({ html: '#tablaCitas', startY: doc.lastAutoTable.finalY + 20, headStyles:{fillColor:[142,68,173]}, columns:[0,1,2] });
+        
+        doc.save("Reporte_Consultorio.pdf");
     }
 </script>
 </body>
