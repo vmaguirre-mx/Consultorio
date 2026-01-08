@@ -4,32 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2c3e50">
-    <title>Control Cardiovascular y Peso</title>
+    <title>Control Médico Pro - Flexible</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     
     <style>
-        :root { --primary: #2c3e50; --secondary: #3498db; --success: #27ae60; --danger: #e74c3c; --accent: #8e44ad; --weight: #f39c12; }
+        :root { --primary: #2c3e50; --secondary: #3498db; --success: #27ae60; --danger: #e74c3c; --accent: #8e44ad; --excel: #1d6f42; }
         body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
         .container { max-width: 1200px; margin: auto; display: flex; flex-direction: column; gap: 15px; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         h2 { color: var(--primary); font-size: 1rem; border-left: 4px solid var(--secondary); padding-left: 10px; margin: 0 0 15px 0; }
         .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        .form-group { flex: 1; }
         label { display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 4px; color: #666; }
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-        .btn { padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px; }
-        .btn-save { background: var(--success); color: white; }
-        .btn-cita { background: var(--accent); color: white; }
-        .btn-pdf { background: var(--danger); color: white; margin-bottom: 10px; }
-        .chart-container { position: relative; height: 250px; width: 100%; }
+        .btn { padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px; color: white; transition: 0.3s; }
+        .btn-save { background: var(--success); }
+        .btn-excel { background: var(--excel); }
+        .btn-export { background: #2980b9; }
+        .btn-pdf { background: var(--danger); width: auto; padding: 6px 15px; font-size: 0.8rem; }
+        .chart-container { position: relative; height: 300px; width: 100%; }
         .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 450px; font-size: 0.85rem; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; font-size: 0.85rem; }
         th { background: #f8f9fa; padding: 12px 10px; text-align: left; }
         td { padding: 12px 10px; border-bottom: 1px solid #eee; }
-        .btn-del { background: #fee2e2; color: #dc2626; border: none; padding: 8px; border-radius: 6px; cursor: pointer; }
+        .btn-del { background: #fee2e2; color: #dc2626; border: none; padding: 8px; border-radius: 6px; }
+        #fileInput { display: none; }
+        .data-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         @media (min-width: 900px) { .container { display: grid; grid-template-columns: 350px 1fr; } .grid-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; } }
     </style>
 </head>
@@ -38,70 +41,67 @@
 <div class="container">
     <div class="sidebar">
         <div class="card">
-            <h2>🩺 Signos y Peso</h2>
+            <h2>🩺 Signos Vitales</h2>
             <div class="form-row">
-                <div class="form-group"><label>Fecha</label><input type="date" id="fClin"></div>
-                <div class="form-group"><label>Hora</label><input type="time" id="hClin"></div>
+                <div style="flex:1"><label>Fecha</label><input type="date" id="fClin"></div>
+                <div style="flex:1"><label>Hora</label><input type="time" id="hClin"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Sistólica</label><input type="number" id="sis" placeholder="120"></div>
-                <div class="form-group"><label>Diastólica</label><input type="number" id="dia" placeholder="80"></div>
+                <div style="flex:1"><label>Sistólica</label><input type="number" id="sis" placeholder="Ex: 120"></div>
+                <div style="flex:1"><label>Diastólica</label><input type="number" id="dia" placeholder="Ex: 80"></div>
             </div>
-            <label>Peso Corporal (kg)</label>
-            <input type="number" id="peso" step="0.1" placeholder="Ej: 75.5" style="margin-bottom:12px">
-            <button class="btn btn-save" onclick="guardarSalud()">GUARDAR REGISTRO</button>
+            <div class="form-row">
+                <div style="flex:1"><label>Pulso (LPM)</label><input type="number" id="pulso" placeholder="Ex: 72"></div>
+                <div style="flex:1"><label>Peso (Opcional)</label><input type="number" id="peso" step="0.1" placeholder="kg"></div>
+            </div>
+            <button class="btn btn-save" onclick="guardarSalud()">GUARDAR</button>
+            
+            <div class="data-actions">
+                <button class="btn btn-excel" onclick="document.getElementById('fileInput').click()">📥 IMPORTAR</button>
+                <button class="btn btn-export" onclick="exportarExcel()">📤 EXPORTAR</button>
+            </div>
+            <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" onchange="importarExcel(event)">
         </div>
 
         <div class="card">
-            <h2>📅 Agenda Cita</h2>
-            <div class="form-row">
-                <div class="form-group"><label>Fecha</label><input type="date" id="fCita"></div>
-                <div class="form-group"><label>Hora</label><input type="time" id="hCita"></div>
-            </div>
+            <h2>📅 Próxima Cita</h2>
             <input type="text" id="medico" placeholder="Médico / Especialidad" style="margin-bottom:10px">
-            <input type="text" id="ubicacion" placeholder="Lugar / Dirección" style="margin-bottom:12px">
-            <button class="btn btn-cita" onclick="guardarCita()">AGENDAR</button>
+            <input type="text" id="ubicacion" placeholder="Lugar / Dirección" style="margin-bottom:10px">
+            <div class="form-row"><input type="date" id="fCita"><input type="time" id="hCita"></div>
+            <button class="btn" style="background:var(--accent)" onclick="guardarCita()">AGENDAR</button>
         </div>
     </div>
 
     <div class="main">
         <div class="card">
-            <h2>📊 Relación Presión vs Peso</h2>
-            <div class="chart-container">
-                <canvas id="graficaSalud"></canvas>
-            </div>
+            <h2>📊 Gráfica de Tendencia</h2>
+            <div class="chart-container"><canvas id="graficaSalud"></canvas></div>
         </div>
 
         <div class="grid-tables">
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
                     <h2>📋 Historial</h2>
-                    <button class="btn btn-pdf" style="width:auto; margin:0; padding: 5px 15px;" onclick="exportarPDF()">PDF</button>
+                    <button class="btn btn-pdf" onclick="exportarPDF()">PDF</button>
                 </div>
                 <div class="table-wrapper">
                     <table id="tablaSalud">
-                        <thead><tr><th>Fecha</th><th>Presión</th><th>Peso</th><th></th></tr></thead>
+                        <thead><tr><th>Fecha</th><th>P.A.</th><th>Pulso</th><th>Peso</th><th></th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
             </div>
-
             <div class="card">
-                <h2>📅 Próximas Citas</h2>
-                <div class="table-wrapper">
-                    <table id="tablaCitas">
-                        <thead><tr><th>Cita</th><th>Médico</th><th>Lugar</th><th></th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+                <h2>📅 Citas</h2>
+                <div class="table-wrapper"><table id="tablaCitas"><thead><tr><th>Fecha</th><th>Médico</th><th>Lugar</th><th></th></tr></thead><tbody></tbody></table></div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    let dbSalud = JSON.parse(localStorage.getItem('db_salud_v10')) || [];
-    let dbCitas = JSON.parse(localStorage.getItem('db_citas_v10')) || [];
+    let dbSalud = JSON.parse(localStorage.getItem('db_salud_v14')) || [];
+    let dbCitas = JSON.parse(localStorage.getItem('db_citas_v14')) || [];
     let miGrafica;
 
     window.onload = () => {
@@ -115,6 +115,7 @@
     };
 
     function t12(h24) {
+        if(!h24) return "";
         let [h, m] = h24.split(':');
         let ampm = h >= 12 ? 'PM' : 'AM';
         h = h % 12 || 12;
@@ -128,66 +129,95 @@
             data: {
                 labels: dbSalud.map(d => d.fLabel),
                 datasets: [
-                    { label: 'Sistólica (mmHg)', data: dbSalud.map(d => d.sis), borderColor: '#e74c3c', tension: 0.3, yAxisID: 'y' },
-                    { label: 'Peso (kg)', data: dbSalud.map(d => d.peso), borderColor: '#f39c12', tension: 0.3, yAxisID: 'y1' }
+                    { label: 'Sistólica', data: dbSalud.map(d => d.sis), borderColor: '#e74c3c', yAxisID: 'y', spanGaps: true },
+                    { label: 'Pulso', data: dbSalud.map(d => d.pulso), borderColor: '#9b59b6', yAxisID: 'y', spanGaps: true },
+                    { label: 'Peso', data: dbSalud.map(d => d.peso || null), borderColor: '#f39c12', yAxisID: 'y1', spanGaps: true }
                 ]
             },
             options: { 
                 maintainAspectRatio: false, 
                 scales: { 
-                    y: { type: 'linear', display: true, position: 'left', title: {display: true, text: 'Presión'} },
-                    y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display: true, text: 'Peso'} }
-                }
+                    y: {position:'left', title:{display:true, text:'Presión/Pulso'}}, 
+                    y1: {position:'right', grid:{drawOnChartArea:false}, title:{display:true, text:'Peso (kg)'}} 
+                } 
             }
         });
     }
 
     function guardarSalud() {
-        const f = document.getElementById('fClin').value;
-        const h = document.getElementById('hClin').value;
-        const s = document.getElementById('sis').value;
-        const d = document.getElementById('dia').value;
-        const p = document.getElementById('peso').value;
-        if(!s || !p) return alert("Ingresa presión y peso.");
+        const f = document.getElementById('fClin').value, h = document.getElementById('hClin').value;
+        const s = document.getElementById('sis').value, d = document.getElementById('dia').value;
+        const pul = document.getElementById('pulso').value, pes = document.getElementById('peso').value;
+        
+        if(!s || !pul) return alert("Sistólica y Pulso son obligatorios.");
+        
+        agregarRegistroSalud(f, h, s, d, pul, pes || null);
+        renderTodo();
+        // Limpiar solo campos de signos
+        document.getElementById('sis').value = ""; document.getElementById('dia').value = "";
+        document.getElementById('pulso').value = ""; document.getElementById('peso').value = "";
+    }
 
+    function agregarRegistroSalud(f, h, s, d, pul, pes) {
         const partes = f.split('-');
         dbSalud.push({
-            id: Date.now(),
+            id: Date.now() + Math.random(),
             fLabel: `${partes[2]}/${partes[1]}`,
+            fechaISO: f, horaISO: h,
             full: `${partes[2]}/${partes[1]}/${partes[0]} ${t12(h)}`,
             sort: `${f}T${h}`,
-            sis: s, dia: d, peso: p
+            sis: s, dia: d, pulso: pul, peso: pes
         });
         dbSalud.sort((a,b) => new Date(a.sort) - new Date(b.sort));
-        localStorage.setItem('db_salud_v10', JSON.stringify(dbSalud));
-        renderTodo();
+        localStorage.setItem('db_salud_v14', JSON.stringify(dbSalud));
+    }
+
+    function exportarExcel() {
+        if(dbSalud.length === 0) return alert("No hay datos.");
+        const data = dbSalud.map(d => ({ Fecha: d.fechaISO, Hora: d.horaISO, Sistolica: d.sis, Diastolica: d.dia, Pulso: d.pulso, Peso: d.peso }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Salud");
+        XLSX.writeFile(wb, `Reporte_Salud_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    function importarExcel(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const workbook = XLSX.read(evt.target.result, { type: 'binary' });
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+            rows.forEach(row => {
+                const f = row.Fecha || "";
+                if(f) agregarRegistroSalud(f, row.Hora||"08:00", row.Sistolica||120, row.Diastolica||80, row.Pulso||70, row.Peso||null);
+            });
+            renderTodo();
+        };
+        reader.readAsBinaryString(file);
     }
 
     function guardarCita() {
         const f = document.getElementById('fCita').value, h = document.getElementById('hCita').value;
         const m = document.getElementById('medico').value, u = document.getElementById('ubicacion').value;
-        if(!m || !u) return alert("Completa los datos de la cita.");
+        if(!m) return;
         dbCitas.push({ id: Date.now(), fecha: f.split('-').reverse().join('/'), hora: t12(h), sort: `${f}T${h}`, medico: m, u: u });
         dbCitas.sort((a,b) => new Date(a.sort) - new Date(b.sort));
-        localStorage.setItem('db_citas_v10', JSON.stringify(dbCitas));
+        localStorage.setItem('db_citas_v14', JSON.stringify(dbCitas));
         renderTodo();
-        document.getElementById('medico').value = ""; document.getElementById('ubicacion').value = "";
     }
 
     function eliminar(id, tipo) {
-        if(!confirm("¿Borrar registro?")) return;
         if(tipo === 'salud') dbSalud = dbSalud.filter(x => x.id !== id);
         else dbCitas = dbCitas.filter(x => x.id !== id);
-        localStorage.setItem(tipo === 'salud' ? 'db_salud_v10' : 'db_citas_v10', JSON.stringify(tipo === 'salud' ? dbSalud : dbCitas));
+        localStorage.setItem(tipo === 'salud' ? 'db_salud_v14' : 'db_citas_v14', JSON.stringify(tipo === 'salud' ? dbSalud : dbCitas));
         renderTodo();
     }
 
     function renderTodo() {
-        const tS = document.querySelector('#tablaSalud tbody');
-        const tC = document.querySelector('#tablaCitas tbody');
+        const tS = document.querySelector('#tablaSalud tbody'), tC = document.querySelector('#tablaCitas tbody');
         tS.innerHTML = ""; tC.innerHTML = "";
         dbSalud.forEach(d => {
-            tS.innerHTML += `<tr><td>${d.full}</td><td>${d.sis}/${d.dia}</td><td>${d.peso} kg</td><td><button class="btn-del" onclick="eliminar(${d.id}, 'salud')">×</button></td></tr>`;
+            tS.innerHTML += `<tr><td>${d.full}</td><td>${d.sis}/${d.dia}</td><td>${d.pulso}</td><td>${d.peso ? d.peso+'kg' : '-'}</td><td><button class="btn-del" onclick="eliminar(${d.id}, 'salud')">×</button></td></tr>`;
         });
         dbCitas.forEach(c => {
             tC.innerHTML += `<tr><td>${c.fecha} ${c.hora}</td><td>${c.medico}</td><td>${c.u}</td><td><button class="btn-del" onclick="eliminar(${c.id}, 'citas')">×</button></td></tr>`;
@@ -195,7 +225,8 @@
         if(miGrafica) {
             miGrafica.data.labels = dbSalud.map(d => d.fLabel);
             miGrafica.data.datasets[0].data = dbSalud.map(d => d.sis);
-            miGrafica.data.datasets[1].data = dbSalud.map(d => d.peso);
+            miGrafica.data.datasets[1].data = dbSalud.map(d => d.pulso);
+            miGrafica.data.datasets[2].data = dbSalud.map(d => d.peso || null);
             miGrafica.update();
         }
     }
@@ -203,9 +234,9 @@
     function exportarPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.text("REPORTE DE PRESIÓN Y PESO", 105, 15, {align:'center'});
-        doc.autoTable({ html: '#tablaSalud', startY: 25, columns: [0, 1, 2] });
-        doc.save("Reporte_Salud.pdf");
+        doc.text("EXPEDIENTE DE SIGNOS VITALES", 105, 15, {align:'center'});
+        doc.autoTable({ html: '#tablaSalud', startY: 25, columns: [0, 1, 2, 3] });
+        doc.save("Expediente_Medico.pdf");
     }
 </script>
 </body>
